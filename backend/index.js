@@ -1,30 +1,23 @@
 require("dotenv").config();
 
 const express = require("express");
-
-
 const cors = require("cors");
 const mysql = require("mysql2");
 
-const { Client, CheckoutAPI } = require("@adyen/api-library");
+const {
+  Client,
+  CheckoutAPI,
+} = require("@adyen/api-library");
 
 const app = express();
 
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
 
 const client = new Client({
   apiKey: process.env.ADYEN_API_KEY,
   environment: "TEST",
 });
-
-
-// const db = mysql.createConnection({
-//   host: process.env.DB_HOST,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-// });
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -42,13 +35,15 @@ const db = mysql.createPool({
   },
 });
 
-db.connect((error) => {
+db.getConnection((error, connection) => {
   if (error) {
-    console.log("Database Connection Failed");
+    console.log("DB Connection Failed");
 
     console.log(error);
   } else {
-    console.log("MySQL Connected");
+    console.log("MySQL Pool Connected");
+
+    connection.release();
   }
 });
 
@@ -58,37 +53,88 @@ app.get("/", (req, res) => {
   res.send("Backend Running");
 });
 
-app.post("/create-payment-session", async (req, res) => {
-  try {
-    const response = await checkout.PaymentsApi.sessions({
-      amount: {
-        currency: "USD",
-        value: 1000,
-      },
-      reference: "ORDER_12345",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
-      returnUrl: "http://localhost:5713",
-      countryCode: "US",
-      shopperLocale: "en-US",
-      channel: "Web",
-    });
+app.post(
+  "/create-payment-session",
+  async (req, res) => {
+    try {
+      const response =
+        await checkout.PaymentsApi.sessions({
+          amount: {
+            currency: "USD",
+            value: 1000,
+          },
 
-    res.json(response);
-  } catch (error) {
-    console.log(error.response?.body || error.message);
+          reference: "ORDER_12345",
 
-    res.status(500).json({
-      error: error.message,
-    });
+          merchantAccount:
+            process.env
+              .ADYEN_MERCHANT_ACCOUNT,
+
+          returnUrl:
+            "http://localhost:5173",
+
+          countryCode: "US",
+
+          shopperLocale: "en-US",
+
+          channel: "Web",
+        });
+
+      res.json(response);
+    } catch (error) {
+      console.log(
+        error.response?.body ||
+          error.message
+      );
+
+      res.status(500).json({
+        error: error.message,
+      });
+    }
   }
-});
+);
 
+app.get("/test-db", (req, res) => {
+  const query = `
+    INSERT INTO payments
+    (
+      transactionId,
+      merchantReference,
+      status,
+      amount
+    )
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [
+      "TEST123",
+      "ORDER_TEST",
+      "true",
+      1000,
+    ],
+    (error, result) => {
+      if (error) {
+        console.log(error);
+
+        res.send(error);
+      } else {
+        res.send(
+          "Database Insert Success"
+        );
+      }
+    }
+  );
+});
 
 app.post("/webhook", async (req, res) => {
   try {
     console.log("WEBHOOK RECEIVED");
 
-    console.log(JSON.stringify(req.body, null, 2));
+    console.log(
+      JSON.stringify(req.body, null, 2)
+    );
 
     const notificationItems =
       req.body.notificationItems || [];
@@ -120,34 +166,40 @@ app.post("/webhook", async (req, res) => {
       const insertQuery = `
         INSERT INTO payments
         (
-            transactionId,
-            merchantReference,
-            status,
-            amount
+          transactionId,
+          merchantReference,
+          status,
+          amount
         )
         VALUES (?, ?, ?, ?)
-        `;
+      `;
 
-        db.query(
+      db.query(
         insertQuery,
         [
-            notification.pspReference,
-            notification.merchantReference,
-            notification.success,
-            notification.amount.value,
+          notification.pspReference,
+
+          notification.merchantReference,
+
+          notification.success,
+
+          notification.amount.value,
         ],
+
         (error, result) => {
-            if (error) {
-            console.log("DB Insert Error");
+          if (error) {
+            console.log(
+              "DB Insert Error"
+            );
 
             console.log(error);
-            } else {
+          } else {
             console.log(
-                "Payment Saved to Database"
+              "Payment Saved to Database"
             );
-            }
+          }
         }
-        );
+      );
 
       if (
         notification.eventCode ===
@@ -160,22 +212,30 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (
-        notification.eventCode === "REFUND"
+        notification.eventCode ===
+        "REFUND"
       ) {
-        console.log("Refund Event Received");
+        console.log(
+          "Refund Event Received"
+        );
       }
     }
 
     res.status(200).send("[accepted]");
   } catch (error) {
-    console.log("Webhook Error:", error);
+    console.log(
+      "Webhook Error:",
+      error
+    );
 
-    res.status(500).send("Webhook Error");
+    res
+      .status(500)
+      .send("Webhook Error");
   }
 });
 
-
-
 app.listen(5000, () => {
-  console.log("Server running on port 5000");
+  console.log(
+    "Server running on port 5000"
+  );
 });
