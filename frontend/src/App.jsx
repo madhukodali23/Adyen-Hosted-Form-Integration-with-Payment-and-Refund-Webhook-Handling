@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 import {
@@ -10,6 +10,8 @@ import {
 import "@adyen/adyen-web/styles/adyen.css";
 
 function App() {
+  const [paymentStatus, setPaymentStatus] = useState("");
+
   useEffect(() => {
     const initializePayment = async () => {
       try {
@@ -30,11 +32,19 @@ function App() {
           },
 
           onPaymentCompleted: (result) => {
-            console.log("Payment Successful", result);
+            console.log(result);
+
+            if (result.resultCode === "Authorised") {
+              alert("Payment Successful ✅");
+            } else {
+              alert("Payment Failed ❌");
+            }
           },
 
           onError: (error) => {
-            console.log("Payment Error", error);
+            console.log(error);
+
+            alert("Payment Failed ❌");
           },
         });
 
