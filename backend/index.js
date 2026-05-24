@@ -11,7 +11,7 @@ const { Client, CheckoutAPI } = require("@adyen/api-library");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); 
 
 const client = new Client({
   apiKey: process.env.ADYEN_API_KEY,
@@ -19,11 +19,23 @@ const client = new Client({
 });
 
 
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+// });
+
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 
