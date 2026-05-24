@@ -1,7 +1,10 @@
 require("dotenv").config();
 
 const express = require("express");
+
+
 const cors = require("cors");
+const mysql = require("mysql2");
 
 const { Client, CheckoutAPI } = require("@adyen/api-library");
 
@@ -15,6 +18,24 @@ const client = new Client({
   environment: "TEST",
 });
 
+
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "Madhu@Datman",
+  database: "adyen_payments",
+});
+
+
+db.connect((error) => {
+  if (error) {
+    console.log("Database Connection Failed");
+
+    console.log(error);
+  } else {
+    console.log("MySQL Connected");
+  }
+});
 
 const checkout = new CheckoutAPI(client);
 
@@ -80,6 +101,38 @@ app.post("/webhook", async (req, res) => {
         "Payment PSP Reference:",
         notification.pspReference
       );
+
+      const insertQuery = `
+        INSERT INTO payments
+        (
+            transactionId,
+            merchantReference,
+            status,
+            amount
+        )
+        VALUES (?, ?, ?, ?)
+        `;
+
+        db.query(
+        insertQuery,
+        [
+            notification.pspReference,
+            notification.merchantReference,
+            notification.success,
+            notification.amount.value,
+        ],
+        (error, result) => {
+            if (error) {
+            console.log("DB Insert Error");
+
+            console.log(error);
+            } else {
+            console.log(
+                "Payment Saved to Database"
+            );
+            }
+        }
+        );
 
       if (
         notification.eventCode ===
