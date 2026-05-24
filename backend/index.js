@@ -48,6 +48,65 @@ app.post("/create-payment-session", async (req, res) => {
 });
 
 
+app.post("/webhook", async (req, res) => {
+  try {
+    console.log("WEBHOOK RECEIVED");
+
+    console.log(JSON.stringify(req.body, null, 2));
+
+    const notificationItems =
+      req.body.notificationItems || [];
+
+    for (const item of notificationItems) {
+      const notification =
+        item.NotificationRequestItem;
+
+      console.log(
+        "Event Code:",
+        notification.eventCode
+      );
+
+      console.log(
+        "Success:",
+        notification.success
+      );
+
+      console.log(
+        "Merchant Reference:",
+        notification.merchantReference
+      );
+
+      console.log(
+        "Payment PSP Reference:",
+        notification.pspReference
+      );
+
+      if (
+        notification.eventCode ===
+          "AUTHORISATION" &&
+        notification.success === "true"
+      ) {
+        console.log(
+          "Payment Authorised Successfully"
+        );
+      }
+
+      if (
+        notification.eventCode === "REFUND"
+      ) {
+        console.log("Refund Event Received");
+      }
+    }
+
+    res.status(200).send("[accepted]");
+  } catch (error) {
+    console.log("Webhook Error:", error);
+
+    res.status(500).send("Webhook Error");
+  }
+});
+
+
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
