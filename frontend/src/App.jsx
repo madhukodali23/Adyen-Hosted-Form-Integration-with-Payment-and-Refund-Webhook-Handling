@@ -16,15 +16,14 @@ function App() {
     const initializePayment = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/create-payment-session"
-        );
+                  `${import.meta.env.VITE_BACKEND_URL}/create-payment-session`);
 
         const session = response.data;
 
         const checkout = await AdyenCheckout({
           environment: "test",
 
-          clientKey: "test_FDLVGSHDEJB73K2LBSQUZZ55SEFMS76F",
+          clientKey: import.meta.env.VITE_ADYEN_CLIENT_KEY,
 
           session: {
             id: session.id,
@@ -47,7 +46,7 @@ function App() {
 
           onError: (error) => {
             console.log(error);
-            window.location.href = "failed";
+            window.location.href = "failed"
           },
         });
 

@@ -11,7 +11,12 @@ const {
 
 const app = express();
 const validator = new hmacValidator();
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      "https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app/",
+  })
+);
 app.use(express.json());
 
 const client = new Client({
@@ -34,6 +39,8 @@ const db = mysql.createPool({
     rejectUnauthorized: false,
   },
 });
+
+ 
 
 db.getConnection((error, connection) => {
   if (error) {
