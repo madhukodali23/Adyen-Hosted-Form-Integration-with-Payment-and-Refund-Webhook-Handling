@@ -125,7 +125,6 @@ project-root/
 ├── README.md
 └── screenshots/
 '''
-
 ---
 
 # Database Schema
