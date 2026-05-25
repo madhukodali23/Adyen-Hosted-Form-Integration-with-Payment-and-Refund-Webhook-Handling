@@ -298,7 +298,13 @@ app.get("/payments", (req, res) => {
 
     if (error) {
 
-      console.log(error);
+      if (error.code === "ER_DUP_ENTRY") {
+        console.log(
+          "Duplicate payment webhook ignored"
+        );
+      } else {
+        console.log(error);
+      }
 
       res.status(500).json({
         error: error.message,
