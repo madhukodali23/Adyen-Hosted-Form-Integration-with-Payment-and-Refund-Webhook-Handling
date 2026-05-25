@@ -101,7 +101,7 @@ Cloud MySQL Database (Railway)
 
 # Folder Structure
 
-'''
+```
 project-root/
 │
 ├── frontend/
@@ -124,7 +124,7 @@ project-root/
 │
 ├── README.md
 └── screenshots/
-'''
+```
 ---
 
 # Database Schema
