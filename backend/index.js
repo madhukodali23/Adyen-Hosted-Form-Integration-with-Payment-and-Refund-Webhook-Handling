@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
@@ -7,10 +6,11 @@ const mysql = require("mysql2");
 const {
   Client,
   CheckoutAPI,
+  hmacValidator
 } = require("@adyen/api-library");
 
 const app = express();
-
+const validator = new hmacValidator();
 app.use(cors());
 app.use(express.json());
 
@@ -144,6 +144,23 @@ app.post("/webhook", async (req, res) => {
     for (const item of notificationItems) {
       const notification =
         item.NotificationRequestItem;
+
+        const isValidHmac =
+          validator.validateHMAC(
+            notification,
+            process.env.ADYEN_HMAC_KEY
+          );
+
+        if (!isValidHmac) {
+
+          console.log(
+            "Invalid HMAC Signature"
+          );
+
+          return res
+            .status(401)
+            .send("Invalid HMAC");
+        }
 
       console.log(
         "Event Code:",
