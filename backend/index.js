@@ -13,9 +13,10 @@ const app = express();
 const validator = new hmacValidator();
 app.use(
   cors({
-    origin:
-      ["https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app/",
-      "http://localhost:5173/"]
+    origin: [
+      "http://localhost:5173",
+      "https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app",
+    ],
   })
 );
 app.use(express.json());
