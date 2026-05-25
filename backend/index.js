@@ -289,6 +289,52 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+app.get("/payments", (req, res) => {
+
+  const query =
+    "SELECT * FROM payments ORDER BY createdAt DESC";
+
+  db.query(query, (error, result) => {
+
+    if (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        error: error.message,
+      });
+
+    } else {
+
+      res.json(result);
+
+    }
+  });
+});
+
+app.get("/refunds", (req, res) => {
+
+  const query =
+    "SELECT * FROM refunds ORDER BY createdAt DESC";
+
+  db.query(query, (error, result) => {
+
+    if (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        error: error.message,
+      });
+
+    } else {
+
+      res.json(result);
+
+    }
+  });
+});
+
 app.listen(5000, () => {
   console.log(
     "Server running on port 5000"
