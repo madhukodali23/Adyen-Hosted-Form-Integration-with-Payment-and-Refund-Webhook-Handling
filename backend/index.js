@@ -318,6 +318,63 @@ app.get("/payments", (req, res) => {
   });
 });
 
+
+app.get("/duplicate-test", (req, res) => {
+
+  const query = `
+    INSERT INTO payments
+    (
+      transactionId,
+      merchantReference,
+      status,
+      amount
+    )
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [
+      "Q6QWVWCWLXPPT9V5",
+      "ORDER_12345",
+      "true",
+      1000,
+    ],
+
+    (error, result) => {
+
+      if (error) {
+
+        if (
+          error.code ===
+          "ER_DUP_ENTRY"
+        ) {
+
+          console.log(
+            "Duplicate payment webhook ignored"
+          );
+
+          res.send(
+            "Duplicate prevented successfully"
+          );
+
+        } else {
+
+          console.log(error);
+
+          res.send(error);
+        }
+
+      } else {
+
+        res.send(
+          "Inserted successfully"
+        );
+      }
+    }
+  );
+});
+
 app.get("/refunds", (req, res) => {
 
   const query =
@@ -327,7 +384,17 @@ app.get("/refunds", (req, res) => {
 
     if (error) {
 
-      console.log(error);
+      if (error.code === "ER_DUP_ENTRY") {
+
+        console.log(
+          "Duplicate refund webhook ignored"
+        );
+
+      } else {
+
+        console.log(error);
+
+      }
 
       res.status(500).json({
         error: error.message,
