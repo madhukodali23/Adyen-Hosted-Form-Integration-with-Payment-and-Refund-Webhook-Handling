@@ -1,0 +1,23 @@
+1. Developed the frontend payment interface using React and Adyen Drop-in.
+
+2. Created backend APIs using Node.js and Express for payment session creation, webhook handling, refund processing, and transaction retrieval.
+
+3. Integrated Adyen Sessions API by configuring the Adyen Client Key in the frontend and Adyen API Key securely in the backend.
+
+4. Implemented payment success and failure navigation pages.
+
+5. Configured webhook handling for AUTHORISATION and REFUND events.
+
+6. Added HMAC validation to ensure webhook authenticity and prevent unauthorized webhook requests.
+
+7. Implemented MySQL database integration initially on localhost and later migrated to Railway cloud MySQL for production accessibility.
+
+8. Added transaction persistence for payments and refunds.
+
+9. Implemented idempotency handling using UNIQUE constraints to avoid duplicate webhook entries.
+
+10. Deployed the backend on Render and frontend on Vercel for public accessibility and webhook testing.
+
+11. Used Postman extensively for API debugging and validation.
+
+12. Worked on AWS cloud infrastructure setup for serverless deployment and secret management.

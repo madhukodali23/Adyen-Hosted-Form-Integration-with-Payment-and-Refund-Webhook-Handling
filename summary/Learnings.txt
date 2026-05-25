@@ -1,0 +1,19 @@
+1. Learned payment gateway architecture and Adyen payment session workflow.
+
+2. Gained understanding of webhook-based backend communication.
+
+3. Learned HMAC-based webhook security validation.
+
+4. Understood cloud deployment concepts using Render, Railway, and Vercel.
+
+5. Learned practical handling of CORS and frontend-backend communication.
+
+6. Understood refund lifecycle management and asynchronous payment processing.
+
+7. Learned database persistence and cloud database connectivity.
+
+8. Gained hands-on debugging experience using Postman.
+
+9. Learned importance of idempotency in payment systems to prevent duplicate transaction processing.
+
+10. Explored serverless deployment concepts and AWS cloud infrastructure practices.

@@ -1,0 +1,19 @@
+1. Faced unauthorized access issues while setting up the Adyen account and configuring API credentials.
+
+2. Understanding the separation of responsibilities between frontend Client Key and backend Adyen API Key.
+
+3. Managing CORS and allowed origin configurations between frontend and backend deployments.
+
+4. Understanding webhook architecture and exposing the local backend for Adyen webhook communication.
+
+5. Initially attempted ngrok setup, but due to macOS administrative access limitations and ngrok cloud configuration issues, migrated backend deployment to Render for stable webhook accessibility.
+
+6. Encountered database connectivity issues because localhost MySQL could not be accessed by the cloud-hosted backend.
+
+7. Resolved the issue by migrating MySQL database to Railway cloud infrastructure.
+
+8. Debugging webhook payloads, payment flows, refund flows, and deployment issues using Postman.
+
+9. Understanding payment session lifecycle and webhook retry mechanisms.
+
+10. Implementing idempotency handling to safely process duplicate webhook retries.
