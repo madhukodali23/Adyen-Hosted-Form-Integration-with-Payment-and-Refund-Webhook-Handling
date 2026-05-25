@@ -94,38 +94,40 @@ app.post(
   }
 );
 
-app.get("/test-db", (req, res) => {
-  const query = `
-    INSERT INTO payments
-    (
-      transactionId,
-      merchantReference,
-      status,
-      amount
-    )
-    VALUES (?, ?, ?, ?)
-  `;
 
-  db.query(
-    query,
-    [
-      "TEST123",
-      "ORDER_TEST",
-      "true",
-      1000,
-    ],
-    (error, result) => {
-      if (error) {
-        console.log(error);
+app.post("/refund", async (req, res) => {
+  try {
+    const { paymentPspReference } = req.body;
 
-        res.send(error);
-      } else {
-        res.send(
-          "Database Insert Success"
-        );
-      }
-    }
-  );
+    const response =
+      await checkout.ModificationsApi.refundCapturedPayment(
+        paymentPspReference,
+        {
+          merchantAccount:
+            process.env
+              .ADYEN_MERCHANT_ACCOUNT,
+
+          amount: {
+            currency: "USD",
+            value: 1000,
+          },
+
+          reference: "REFUND_ORDER_123",
+        }
+      );
+
+    console.log("Refund Response");
+
+    console.log(response);
+
+    res.json(response);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
 });
 
 app.post("/webhook", async (req, res) => {
@@ -212,11 +214,47 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (
-        notification.eventCode ===
-        "REFUND"
+        notification.eventCode === "REFUND"
       ) {
-        console.log(
-          "Refund Event Received"
+
+        console.log("Refund Event Received");
+
+        const refundInsertQuery = `
+          INSERT INTO refunds
+          (
+            refundId,
+            paymentId,
+            status,
+            refundAmount
+          )
+          VALUES (?, ?, ?, ?)
+        `;
+
+        db.query(
+          refundInsertQuery,
+          [
+            notification.pspReference,
+
+            notification.originalReference,
+
+            notification.success,
+
+            notification.amount.value,
+          ],
+
+          (error, result) => {
+            if (error) {
+              console.log(
+                "Refund DB Insert Error"
+              );
+
+              console.log(error);
+            } else {
+              console.log(
+                "Refund Saved to Database"
+              );
+            }
+          }
         );
       }
     }
