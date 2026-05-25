@@ -297,6 +297,49 @@ CVV: 737
 
 ---
 
+
+
+## Idempotency Handling
+
+To prevent duplicate webhook processing and repeated transaction entries, idempotency handling was implemented using UNIQUE constraints on transaction and refund identifiers.
+
+### Payments Table UNIQUE Constraint
+
+```sql
+ALTER TABLE payments
+ADD CONSTRAINT unique_transaction
+UNIQUE (transactionId);
+```
+
+### Refunds Table UNIQUE Constraint
+
+```sql
+ALTER TABLE refunds
+ADD CONSTRAINT unique_refund
+UNIQUE (refundId);
+```
+
+### Why Idempotency Was Needed
+
+Payment gateways like Adyen may retry webhook delivery multiple times due to:
+- Network failures
+- Timeout issues
+- Delivery confirmation failures
+
+Without idempotency handling, duplicate webhook events could create multiple payment or refund records in the database.
+
+### Solution
+
+By enforcing UNIQUE constraints:
+- Duplicate transaction inserts are automatically rejected
+- Duplicate refund inserts are prevented
+- Database consistency is maintained
+- Webhook retries are safely handled
+
+### Result
+
+This ensures reliable and production-safe webhook processing for both payments and refunds.
+
 # Conclusion
 
 This project demonstrates a production-style payment integration system using Adyen with secure webhook validation, cloud deployment, refund handling, and persistent cloud database storage.
