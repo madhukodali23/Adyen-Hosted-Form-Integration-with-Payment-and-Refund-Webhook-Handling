@@ -14,7 +14,8 @@ const validator = new hmacValidator();
 app.use(
   cors({
     origin:
-      "https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app/",
+      ["https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app/",
+      "http://localhost:5173/"]
   })
 );
 app.use(express.json());
@@ -78,7 +79,7 @@ app.post(
               .ADYEN_MERCHANT_ACCOUNT,
 
           returnUrl:
-            "https://adyen-hosted-form-integration-with-payment-and-refun-apenv6bre.vercel.app/",
+            "http://localhost:5173/",
 
           countryCode: "US",
 
