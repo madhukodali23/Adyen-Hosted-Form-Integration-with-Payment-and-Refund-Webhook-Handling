@@ -5,6 +5,7 @@ import {
   AdyenCheckout,
   Dropin,
   Card,
+  
 } from "@adyen/adyen-web";
 
 import "@adyen/adyen-web/styles/adyen.css";
