@@ -5,7 +5,6 @@ import {
   AdyenCheckout,
   Dropin,
   Card,
-  
 } from "@adyen/adyen-web";
 
 import "@adyen/adyen-web/styles/adyen.css";
@@ -36,16 +35,19 @@ function App() {
             console.log(result);
 
             if (result.resultCode === "Authorised") {
-              alert("Payment Successful ✅");
+              window.location.href =
+                "/success";
+
             } else {
-              alert("Payment Failed ❌");
+
+              window.location.href =
+                "/failed";
             }
           },
 
           onError: (error) => {
             console.log(error);
-
-            alert("Payment Failed ❌");
+            window.location.href = "failed";
           },
         });
 
