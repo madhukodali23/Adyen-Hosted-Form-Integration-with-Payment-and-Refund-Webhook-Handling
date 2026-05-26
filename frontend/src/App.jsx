@@ -30,105 +30,19 @@ function App() {
             sessionData: session.sessionData,
           },
 
-          // onPaymentCompleted: (result) => {
-          //   console.log(result);
+          onPaymentCompleted: (result) => {
+            console.log(result);
 
-          //   if (result.resultCode === "Authorised") {
-          //     window.location.href =
-          //       "/success";
+            if (result.resultCode === "Authorised") {
+              window.location.href =
+                "/success";
 
-          //   } else {
+            } else {
 
-          //     window.location.href =
-          //       "/failed";
-          //   }
-          // },
-
-          onPaymentCompleted:
-              async (result) => {
-
-                console.log(
-                  "PAYMENT RESULT",
-                  result
-                );
-
-                const paymentId =
-                  result.pspReference;
-
-                let attempts = 0;
-
-                const checkPaymentStatus =
-                  setInterval(async () => {
-
-                    try {
-
-                      const response =
-                        await axios.get(
-                          `${import.meta.env.VITE_BACKEND_URL}/payment-status/${paymentId}`
-                        );
-
-                      const status =
-                        response.data.status;
-
-                      console.log(
-                        "DB STATUS",
-                        status
-                      );
-
-                      if (
-                        status === true ||
-                        status === "true"
-                      ) {
-
-                        clearInterval(
-                          checkPaymentStatus
-                        );
-
-                        window.location.href =
-                          "/success";
-                      }
-
-                      if (
-                        status === false ||
-                        status === "false"
-                      ) {
-
-                        clearInterval(
-                          checkPaymentStatus
-                        );
-
-                        window.location.href =
-                          "/failed";
-                      }
-
-                      attempts++;
-
-                      if (
-                        attempts > 10
-                      ) {
-
-                        clearInterval(
-                          checkPaymentStatus
-                        );
-
-                        window.location.href =
-                          "/failed";
-                      }
-
-                    } catch (error) {
-
-                      console.log(error);
-
-                      clearInterval(
-                        checkPaymentStatus
-                      );
-
-                      window.location.href =
-                        "/failed";
-                    }
-
-                  }, 3000);
-              },
+              window.location.href =
+                "/failed";
+            }
+          },
 
           onError: (error) => {
 
