@@ -418,6 +418,49 @@ app.get("/refunds", (req, res) => {
   });
 });
 
+app.get(
+  "/latest-payment-status",
+  async (req, res) => {
+
+    try {
+
+      const [rows] =
+        await pool.query(
+          `
+          SELECT *
+          FROM payments
+          ORDER BY id DESC
+          LIMIT 1
+          `
+        );
+
+      if (
+        rows.length === 0
+      ) {
+
+        return res.json({
+          status: "pending",
+        });
+      }
+
+      return res.json({
+        status:
+          rows[0].status,
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+        error:
+          "Server Error",
+      });
+    }
+  }
+);
+
+
 app.listen(5000, () => {
   console.log(
     "Server running on port 5000"
