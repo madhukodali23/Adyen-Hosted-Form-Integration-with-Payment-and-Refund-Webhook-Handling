@@ -16,7 +16,8 @@ function App() {
     const initializePayment = async () => {
       try {
         const response = await axios.post(
-                  `${import.meta.env.VITE_BACKEND_URL}/create-payment-session`);
+          `${import.meta.env.VITE_BACKEND_URL}/create-payment-session`
+        );
 
         const session = response.data;
 
@@ -30,93 +31,21 @@ function App() {
             sessionData: session.sessionData,
           },
 
-          // onPaymentCompleted: (result) => {
-          //   console.log(result);
+          showResultPage: false,
 
-          //   if (result.resultCode === "Authorised") {
-          //     window.location.href =
-          //       "/success";
-
-          //   } else {
-
-          //     window.location.href =
-          //       "/failed";
-          //   }
-          // },
-          
-          onPaymentCompleted: async () => {
-
-    let attempts = 0;
-
-    const interval =
-      setInterval(async () => {
-
-        try {
-
-          const response =
-            await axios.get(
-              `${import.meta.env.VITE_BACKEND_URL}/latest-payment-status`
-            );
-
-          const status =
-            response.data.status;
-
-          console.log(
-            "LATEST STATUS",
-            status
-          );
-
-          if (
-            status === true
-          ) {
-
-            clearInterval(interval);
-
-            window.location.href =
-              "/success";
-          }
-
-          if (
-            status === false
-          ) {
-
-            clearInterval(interval);
-
-            window.location.href =
-              "/failed";
-          }
-
-          attempts++;
-
-          if (
-            attempts > 10
-          ) {
-
-            clearInterval(interval);
-
-            window.location.href =
-              "/failed";
-          }
-
-        } catch (error) {
-
-          console.log(error);
-
-          clearInterval(interval);
-
-          window.location.href =
-            "/failed";
-        }
-
-      }, 3000);
+          onPaymentCompleted: (result, component) => {
+            console.log("onPaymentCompleted result:", result);
+            window.location.href = "/success";
           },
 
-          onError: (error) => {
+          onPaymentFailed: (result, component) => {
+            console.log("onPaymentFailed result:", result);
+            window.location.href = "/failed";
+          },
 
-            console.log(error);
-
-            window.location.href =
-              "/failed";
+          onError: (error, component) => {
+            console.log("onError:", error);
+            window.location.href = "/failed";
           },
         });
 
@@ -129,6 +58,8 @@ function App() {
               holderNameRequired: true,
             },
           },
+
+          showPayButton: true,
         });
 
         dropin.mount("#payment");
@@ -142,10 +73,10 @@ function App() {
 
   return (
     <>
-    <h1 className = "payment-heading">Adyen Payment Integration</h1>
-     <div style={{ width: "400px", margin: "50px auto" }}>
-      <div id="payment"></div>
-    </div>
+      <h1 className="payment-heading">Adyen Payment Integration</h1>
+      <div style={{ width: "400px", margin: "50px auto" }}>
+        <div id="payment"></div>
+      </div>
     </>
   );
 }
