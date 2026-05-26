@@ -30,18 +30,85 @@ function App() {
             sessionData: session.sessionData,
           },
 
-          onPaymentCompleted: (result) => {
-            console.log(result);
+          // onPaymentCompleted: (result) => {
+          //   console.log(result);
 
-            if (result.resultCode === "Authorised") {
-              window.location.href =
-                "/success";
+          //   if (result.resultCode === "Authorised") {
+          //     window.location.href =
+          //       "/success";
 
-            } else {
+          //   } else {
 
-              window.location.href =
-                "/failed";
-            }
+          //     window.location.href =
+          //       "/failed";
+          //   }
+          // },
+          
+          onPaymentCompleted: async () => {
+
+    let attempts = 0;
+
+    const interval =
+      setInterval(async () => {
+
+        try {
+
+          const response =
+            await axios.get(
+              `${import.meta.env.VITE_BACKEND_URL}/latest-payment-status`
+            );
+
+          const status =
+            response.data.status;
+
+          console.log(
+            "LATEST STATUS",
+            status
+          );
+
+          if (
+            status === true
+          ) {
+
+            clearInterval(interval);
+
+            window.location.href =
+              "/success";
+          }
+
+          if (
+            status === false
+          ) {
+
+            clearInterval(interval);
+
+            window.location.href =
+              "/failed";
+          }
+
+          attempts++;
+
+          if (
+            attempts > 10
+          ) {
+
+            clearInterval(interval);
+
+            window.location.href =
+              "/failed";
+          }
+
+        } catch (error) {
+
+          console.log(error);
+
+          clearInterval(interval);
+
+          window.location.href =
+            "/failed";
+        }
+
+      }, 3000);
           },
 
           onError: (error) => {

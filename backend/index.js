@@ -425,7 +425,7 @@ app.get(
     try {
 
       const [rows] =
-        await pool.query(
+        await db.query(
           `
           SELECT *
           FROM payments
