@@ -418,45 +418,45 @@ app.get("/refunds", (req, res) => {
   });
 });
 
-app.get(
-  "/latest-payment-status",
-  async (req, res) => {
+app.get("/latest-payment-status",(req, res) => {
 
-    try {
+    const query =
+      `
+      SELECT *
+      FROM payments
+      ORDER BY id DESC
+      LIMIT 1
+      `;
 
-      const [rows] =
-        await db.query(
-          `
-          SELECT *
-          FROM payments
-          ORDER BY id DESC
-          LIMIT 1
-          `
-        );
+    db.query(
+      query,
+      (error, result) => {
 
-      if (
-        rows.length === 0
-      ) {
+        if (error) {
+
+          console.log(error);
+
+          return res.status(500).json({
+            error:
+              error.message,
+          });
+        }
+
+        if (
+          result.length === 0
+        ) {
+
+          return res.json({
+            status: "pending",
+          });
+        }
 
         return res.json({
-          status: "pending",
+          status:
+            result[0].status,
         });
       }
-
-      return res.json({
-        status:
-          rows[0].status,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        error:
-          "Server Error",
-      });
-    }
+    );
   }
 );
 
