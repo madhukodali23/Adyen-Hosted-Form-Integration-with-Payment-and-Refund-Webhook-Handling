@@ -153,7 +153,7 @@ app.get(
           `
           SELECT *
           FROM payments
-          WHERE transactionId = ?
+          WHERE pspReference = ?
           ORDER BY createdAt DESC
           LIMIT 1
           `,
@@ -171,7 +171,7 @@ app.get(
 
       return res.json({
         status:
-          rows[0].status,
+          rows[0].success,
       });
 
     } catch (error) {

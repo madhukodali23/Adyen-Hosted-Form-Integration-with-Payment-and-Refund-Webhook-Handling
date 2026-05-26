@@ -44,52 +44,91 @@ function App() {
           //   }
           // },
 
-
           onPaymentCompleted:
-            async (result) => {
+              async (result) => {
 
-              console.log(result);
+                console.log(
+                  "PAYMENT RESULT",
+                  result
+                );
 
-              const paymentId =
-                result.pspReference;
+                const paymentId =
+                  result.pspReference;
 
-              setTimeout(async () => {
+                let attempts = 0;
 
-                try {
+                const checkPaymentStatus =
+                  setInterval(async () => {
 
-                  const response =
-                    await axios.get(
-                      `${import.meta.env.VITE_BACKEND_URL}/payment-status/${paymentId}`
-                    );
+                    try {
 
-                  const status =
-                    response.data.status;
+                      const response =
+                        await axios.get(
+                          `${import.meta.env.VITE_BACKEND_URL}/payment-status/${paymentId}`
+                        );
 
-                  console.log(status);
+                      const status =
+                        response.data.status;
 
-                  if (
-                    status === "true"
-                  ) {
+                      console.log(
+                        "DB STATUS",
+                        status
+                      );
 
-                    window.location.href =
-                      "/success";
+                      if (
+                        status === true ||
+                        status === "true"
+                      ) {
 
-                  } else {
+                        clearInterval(
+                          checkPaymentStatus
+                        );
 
-                    window.location.href =
-                      "/failed";
-                  }
+                        window.location.href =
+                          "/success";
+                      }
 
-                } catch (error) {
+                      if (
+                        status === false ||
+                        status === "false"
+                      ) {
 
-                  console.log(error);
+                        clearInterval(
+                          checkPaymentStatus
+                        );
 
-                  window.location.href =
-                    "/failed";
-                }
+                        window.location.href =
+                          "/failed";
+                      }
 
-              }, 5000);
-            },
+                      attempts++;
+
+                      if (
+                        attempts > 10
+                      ) {
+
+                        clearInterval(
+                          checkPaymentStatus
+                        );
+
+                        window.location.href =
+                          "/failed";
+                      }
+
+                    } catch (error) {
+
+                      console.log(error);
+
+                      clearInterval(
+                        checkPaymentStatus
+                      );
+
+                      window.location.href =
+                        "/failed";
+                    }
+
+                  }, 3000);
+              },
 
           onError: (error) => {
 
