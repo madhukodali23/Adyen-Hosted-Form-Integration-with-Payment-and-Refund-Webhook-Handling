@@ -153,12 +153,14 @@ app.get(
           `
           SELECT *
           FROM payments
-          WHERE pspReference = ?
+          WHERE transactionId = ?
           ORDER BY createdAt DESC
           LIMIT 1
           `,
           [paymentId]
         );
+
+      console.log(rows);
 
       if (
         rows.length === 0
@@ -171,7 +173,7 @@ app.get(
 
       return res.json({
         status:
-          rows[0].success,
+          rows[0].status,
       });
 
     } catch (error) {
