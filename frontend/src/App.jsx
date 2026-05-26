@@ -30,23 +30,73 @@ function App() {
             sessionData: session.sessionData,
           },
 
-          onPaymentCompleted: (result) => {
-            console.log(result);
+          // onPaymentCompleted: (result) => {
+          //   console.log(result);
 
-            if (result.resultCode === "Authorised") {
-              window.location.href =
-                "/success";
+          //   if (result.resultCode === "Authorised") {
+          //     window.location.href =
+          //       "/success";
 
-            } else {
+          //   } else {
 
-              window.location.href =
-                "/failed";
-            }
-          },
+          //     window.location.href =
+          //       "/failed";
+          //   }
+          // },
+
+
+          onPaymentCompleted:
+            async (result) => {
+
+              console.log(result);
+
+              const paymentId =
+                result.pspReference;
+
+              setTimeout(async () => {
+
+                try {
+
+                  const response =
+                    await axios.get(
+                      `${import.meta.env.VITE_BACKEND_URL}/payment-status/${paymentId}`
+                    );
+
+                  const status =
+                    response.data.status;
+
+                  console.log(status);
+
+                  if (
+                    status === "true"
+                  ) {
+
+                    window.location.href =
+                      "/success";
+
+                  } else {
+
+                    window.location.href =
+                      "/failed";
+                  }
+
+                } catch (error) {
+
+                  console.log(error);
+
+                  window.location.href =
+                    "/failed";
+                }
+
+              }, 5000);
+            },
 
           onError: (error) => {
+
             console.log(error);
-            window.location.href = "failed"
+
+            window.location.href =
+              "/failed";
           },
         });
 

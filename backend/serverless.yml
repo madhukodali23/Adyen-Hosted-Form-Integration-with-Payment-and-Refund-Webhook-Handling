@@ -1,0 +1,23 @@
+service: adyen-payment-system
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource: "*"
+
+functions:
+  app:
+    handler: handler.handler
+
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
