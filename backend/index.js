@@ -139,54 +139,6 @@ app.post("/refund", async (req, res) => {
   }
 });
 
-app.get(
-  "/payment-status/:id",
-  async (req, res) => {
-
-    try {
-
-      const paymentId =
-        req.params.id;
-
-      const [rows] =
-        await pool.query(
-          `
-          SELECT *
-          FROM payments
-          WHERE transactionId = ?
-          ORDER BY createdAt DESC
-          LIMIT 1
-          `,
-          [paymentId]
-        );
-
-      console.log(rows);
-
-      if (
-        rows.length === 0
-      ) {
-
-        return res.json({
-          status: "pending",
-        });
-      }
-
-      return res.json({
-        status:
-          rows[0].status,
-      });
-
-    } catch (error) {
-
-      console.log(error);
-
-      res.status(500).json({
-        error:
-          "Server Error",
-      });
-    }
-  }
-);
 
 app.post("/webhook", async (req, res) => {
   try {
