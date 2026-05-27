@@ -2,7 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
-const { v4: uuidv4 } = require("uuid");
 
 const {
   Client,
@@ -64,74 +63,19 @@ app.get("/", (req, res) => {
   res.send("Backend Running");
 });
 
-// app.post(
-//   "/create-payment-session",
-//   async (req, res) => {
-//     try {
-//       const orderId = `ORDER_${Date.now()}`;
-//       const response =
-//         await checkout.PaymentsApi.sessions({
-//           amount: {
-//             currency: "USD",
-//             value: 1000,
-//           },
-
-//           reference: orderId,
-
-//           merchantAccount:
-//             process.env
-//               .ADYEN_MERCHANT_ACCOUNT,
-
-//           returnUrl:
-//             "http://localhost:5173/",
-
-//           countryCode: "US",
-
-//           shopperLocale: "en-US",
-
-//           channel: "Web",
-//         });
-
-//       res.json(response);
-//     } catch (error) {
-//       console.log(
-//         error.response?.body ||
-//           error.message
-//       );
-
-//       res.status(500).json({
-//         error: error.message,
-//       });
-//     }
-//   }
-// );
-
-
 app.post(
   "/create-payment-session",
   async (req, res) => {
-
     try {
-
-      const uniqueId =
-        uuidv4();
-
-      const orderId =
-        uniqueId;
-
-      const merchantReference =
-        `OT-${uniqueId}`;
-
+      const orderId = `ORDER_${Date.now()}`;
       const response =
         await checkout.PaymentsApi.sessions({
-
           amount: {
             currency: "USD",
             value: 1000,
           },
 
-          reference:
-            merchantReference,
+          reference: orderId,
 
           merchantAccount:
             process.env
@@ -140,39 +84,28 @@ app.post(
           returnUrl:
             "http://localhost:5173/",
 
-          countryCode:
-            "US",
+          countryCode: "US",
 
-          shopperLocale:
-            "en-US",
+          shopperLocale: "en-US",
 
-          channel:
-            "Web",
+          channel: "Web",
         });
 
-      res.json({
-
-        ...response,
-
-        orderId,
-
-        merchantReference,
-      });
-
+      res.json(response);
     } catch (error) {
-
       console.log(
         error.response?.body ||
-        error.message
+          error.message
       );
 
       res.status(500).json({
-        error:
-          error.message,
+        error: error.message,
       });
     }
   }
 );
+
+
 
 
 app.post("/refund", async (req, res) => {
@@ -211,213 +144,37 @@ app.post("/refund", async (req, res) => {
 });
 
 
-// app.post("/webhook", async (req, res) => {
-//   try {
-//     console.log("WEBHOOK RECEIVED");
-
-//     console.log(
-//       JSON.stringify(req.body, null, 2)
-//     );
-
-//     const notificationItems =
-//       req.body.notificationItems || [];
-
-//     for (const item of notificationItems) {
-//       const notification =
-//         item.NotificationRequestItem;
-
-//         const isValidHmac =
-//           validator.validateHMAC(
-//             notification,
-//             process.env.ADYEN_HMAC_KEY
-//           );
-
-//         if (!isValidHmac) {
-
-//           console.log(
-//             "Invalid HMAC Signature"
-//           );
-
-//           return res
-//             .status(401)
-//             .send("Invalid HMAC");
-//         }
-
-//       console.log(
-//         "Event Code:",
-//         notification.eventCode
-//       );
-
-//       console.log(
-//         "Success:",
-//         notification.success
-//       );
-
-//       console.log(
-//         "Merchant Reference:",
-//         notification.merchantReference
-//       );
-
-//       console.log(
-//         "Payment PSP Reference:",
-//         notification.pspReference
-//       );
-
-//       const insertQuery = `
-//         INSERT INTO payments
-//         (
-//           transactionId,
-//           merchantReference,
-//           status,
-//           amount
-//         )
-//         VALUES (?, ?, ?, ?)
-//       `;
-
-//       db.query(
-//         insertQuery,
-//         [
-//           notification.pspReference,
-
-//           notification.merchantReference,
-
-//           notification.success,
-
-//           notification.amount.value,
-//         ],
-
-//         (error, result) => {
-//           if (error) {
-//             console.log(
-//               "DB Insert Error"
-//             );
-
-//             console.log(error);
-//           } else {
-//             console.log(
-//               "Payment Saved to Database"
-//             );
-//           }
-//         }
-//       );
-
-//       if (
-//         notification.eventCode ===
-//           "AUTHORISATION" &&
-//         notification.success === "true"
-//       ) {
-//         console.log(
-//           "Payment Authorised Successfully"
-//         );
-//       }
-
-//       if (
-//         notification.eventCode === "REFUND"
-//       ) {
-
-//         console.log("Refund Event Received");
-
-//         const refundInsertQuery = `
-//           INSERT INTO refunds
-//           (
-//             refundId,
-//             paymentId,
-//             status,
-//             refundAmount
-//           )
-//           VALUES (?, ?, ?, ?)
-//         `;
-
-//         db.query(
-//           refundInsertQuery,
-//           [
-//             notification.pspReference,
-
-//             notification.originalReference,
-
-//             notification.success,
-
-//             notification.amount.value,
-//           ],
-
-//           (error, result) => {
-//             if (error) {
-//               console.log(
-//                 "Refund DB Insert Error"
-//               );
-
-//               console.log(error);
-//             } else {
-//               console.log(
-//                 "Refund Saved to Database"
-//               );
-//             }
-//           }
-//         );
-//       }
-//     }
-
-//     res.status(200).send("[accepted]");
-//   } catch (error) {
-//     console.log(
-//       "Webhook Error:",
-//       error
-//     );
-
-//     res
-//       .status(500)
-//       .send("Webhook Error");
-//   }
-// });
-
-
-
 app.post("/webhook", async (req, res) => {
-
   try {
+    console.log("WEBHOOK RECEIVED");
 
     console.log(
-      "WEBHOOK RECEIVED"
-    );
-
-    console.log(
-      JSON.stringify(
-        req.body,
-        null,
-        2
-      )
+      JSON.stringify(req.body, null, 2)
     );
 
     const notificationItems =
       req.body.notificationItems || [];
 
-    for (
-      const item of notificationItems
-    ) {
-
+    for (const item of notificationItems) {
       const notification =
-        item
-          .NotificationRequestItem;
+        item.NotificationRequestItem;
 
-      const isValidHmac =
-        validator.validateHMAC(
+        const isValidHmac =
+          validator.validateHMAC(
+            notification,
+            process.env.ADYEN_HMAC_KEY
+          );
 
-          notification,
+        if (!isValidHmac) {
 
-          process.env
-            .ADYEN_HMAC_KEY
-        );
+          console.log(
+            "Invalid HMAC Signature"
+          );
 
-      if (!isValidHmac) {
-
-        console.log(
-          "Invalid HMAC Signature"
-        );
-
-        return res
-          .status(401)
-          .send("Invalid HMAC");
-      }
+          return res
+            .status(401)
+            .send("Invalid HMAC");
+        }
 
       console.log(
         "Event Code:",
@@ -439,61 +196,37 @@ app.post("/webhook", async (req, res) => {
         notification.pspReference
       );
 
-      const transactionId =
-        notification.pspReference;
-
-      const merchantReference =
-        notification.merchantReference;
-
-      const orderId =
-        notification.merchantReference;
-
-      const status =
-        notification.success;
-
-      const amount =
-        notification.amount.value;
-
       const insertQuery = `
         INSERT INTO payments
         (
           transactionId,
           merchantReference,
           status,
-          amount,
-          orderId
+          amount
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?)
       `;
 
       db.query(
-
         insertQuery,
-
         [
-          transactionId,
+          notification.pspReference,
 
-          merchantReference,
+          notification.merchantReference,
 
-          status,
+          notification.success,
 
-          amount,
-
-          orderId,
+          notification.amount.value,
         ],
 
         (error, result) => {
-
           if (error) {
-
             console.log(
               "DB Insert Error"
             );
 
             console.log(error);
-
           } else {
-
             console.log(
               "Payment Saved to Database"
             );
@@ -502,28 +235,20 @@ app.post("/webhook", async (req, res) => {
       );
 
       if (
-
         notification.eventCode ===
           "AUTHORISATION" &&
-
-        notification.success ===
-          "true"
-
+        notification.success === "true"
       ) {
-
         console.log(
           "Payment Authorised Successfully"
         );
       }
 
       if (
-        notification.eventCode ===
-        "REFUND"
+        notification.eventCode === "REFUND"
       ) {
 
-        console.log(
-          "Refund Event Received"
-        );
+        console.log("Refund Event Received");
 
         const refundInsertQuery = `
           INSERT INTO refunds
@@ -537,35 +262,25 @@ app.post("/webhook", async (req, res) => {
         `;
 
         db.query(
-
           refundInsertQuery,
-
           [
-            notification
-              .pspReference,
+            notification.pspReference,
 
-            notification
-              .originalReference,
+            notification.originalReference,
 
-            notification
-              .success,
+            notification.success,
 
-            notification
-              .amount.value,
+            notification.amount.value,
           ],
 
           (error, result) => {
-
             if (error) {
-
               console.log(
                 "Refund DB Insert Error"
               );
 
               console.log(error);
-
             } else {
-
               console.log(
                 "Refund Saved to Database"
               );
@@ -575,12 +290,8 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
-    res
-      .status(200)
-      .send("[accepted]");
-
+    res.status(200).send("[accepted]");
   } catch (error) {
-
     console.log(
       "Webhook Error:",
       error
@@ -591,6 +302,10 @@ app.post("/webhook", async (req, res) => {
       .send("Webhook Error");
   }
 });
+
+
+
+
 
 
 app.get("/payments", (req, res) => {
