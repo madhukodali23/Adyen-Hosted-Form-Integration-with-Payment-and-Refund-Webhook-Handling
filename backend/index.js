@@ -302,7 +302,7 @@ app.post("/webhook", async (req, res) => {
       //   ],
 
       
-        [
+        db.insert([
           notification.pspReference,
 
           notification.merchantReference,
@@ -312,7 +312,7 @@ app.post("/webhook", async (req, res) => {
           notification.amount.value,
 
           Date.now().toString(),
-        ]
+        ],
 
         (error, result) => {
           if (error) {
