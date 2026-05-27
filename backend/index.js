@@ -2,9 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
-const { v4: uuidv4 } =
-  require("uuid");
-
 
 const {
   Client,
@@ -66,114 +63,48 @@ app.get("/", (req, res) => {
   res.send("Backend Running");
 });
 
-// app.post(
-//   "/create-payment-session",
-//   async (req, res) => {
-//     try {
-//       const orderId =
-//       Date.now().toString();
-
-//       const merchantReference =
-//       `OT-${uuidv4()}`;
-
-//       const response =
-//         await checkout.PaymentsApi.sessions({
-//           amount: {
-//             currency: "USD",
-//             value: 1000,
-//           },
-
-//           reference: orderId,
-
-//           merchantAccount:
-//             process.env
-//               .ADYEN_MERCHANT_ACCOUNT,
-
-//           returnUrl:
-//             "http://localhost:5173/",
-
-//           countryCode: "US",
-
-//           shopperLocale: "en-US",
-
-//           channel: "Web",
-//         });
-
-//       res.json(response);
-//     } catch (error) {
-//       console.log(
-//         error.response?.body ||
-//           error.message
-//       );
-
-//       res.status(500).json({
-//         error: error.message,
-//       });
-//     }
-//   }
-// );
-
 app.post(
   "/create-payment-session",
   async (req, res) => {
-
     try {
-
       const orderId =
-        Date.now().toString();
+      Date.now().toString();
 
       const merchantReference =
-        `OT-${uuidv4()}`;
+      `OT-${uuidv4()}`;
 
       const response =
-        await checkout
-          .PaymentsApi
-          .sessions({
+        await checkout.PaymentsApi.sessions({
+          amount: {
+            currency: "USD",
+            value: 1000,
+          },
 
-            amount: {
-              currency: "USD",
-              value: 1000,
-            },
+          reference: orderId,
 
-            reference:
-              merchantReference,
+          merchantAccount:
+            process.env
+              .ADYEN_MERCHANT_ACCOUNT,
 
-            merchantAccount:
-              process.env
-                .ADYEN_MERCHANT_ACCOUNT,
+          returnUrl:
+            "http://localhost:5173/",
 
-            returnUrl:
-              "http://localhost:5173/",
+          countryCode: "US",
 
-            countryCode:
-              "US",
+          shopperLocale: "en-US",
 
-            shopperLocale:
-              "en-US",
+          channel: "Web",
+        });
 
-            channel:
-              "Web",
-          });
-
-      res.json({
-
-        ...response,
-
-        orderId,
-
-        merchantReference,
-      });
-
+      res.json(response);
     } catch (error) {
-
       console.log(
         error.response?.body ||
-        error.message
+          error.message
       );
 
       res.status(500).json({
-        error:
-          error.message,
+        error: error.message,
       });
     }
   }
@@ -292,20 +223,9 @@ app.post("/webhook", async (req, res) => {
         VALUES (?, ?, ?, ?, ?)
       `;
 
-      // db.query(
-      //   insertQuery,
-      //   [
-      //     notification.pspReference,
-
-      //     notification.merchantReference,
-
-      //     notification.success,
-
-      //     notification.amount.value,
-      //   ],
-
-      
-        db.insert([
+      db.query(
+        insertQuery,
+        [
           notification.pspReference,
 
           notification.merchantReference,
@@ -313,10 +233,10 @@ app.post("/webhook", async (req, res) => {
           notification.success,
 
           notification.amount.value,
-
-          Date.now().toString(),
         ],
 
+      
+      
         (error, result) => {
           if (error) {
             console.log(
