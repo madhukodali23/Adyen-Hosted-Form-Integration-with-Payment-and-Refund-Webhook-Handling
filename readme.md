@@ -1,4 +1,4 @@
-# Adyen Hosted Payment Integration with Webhook, Refunds, AWS Serverless Deployment, and 3D Secure Support
+# Adyen Hosted Payment Integration with Webhook, Refunds, AWS Serverless Deployment
 
 ## Project Overview
 
@@ -23,8 +23,6 @@ The system demonstrates a production-style payment architecture with secure webh
 - Payment and refund persistence
 - Idempotency handling using UNIQUE constraints
 - Success and failure payment handling
-- Adyen Web v6 callback handling
-- 3D Secure (3DS) ready architecture
 
 ---
 
