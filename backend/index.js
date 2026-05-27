@@ -63,48 +63,118 @@ app.get("/", (req, res) => {
   res.send("Backend Running");
 });
 
+// app.post(
+//   "/create-payment-session",
+//   async (req, res) => {
+//     try {
+//       const orderId =
+//       Date.now().toString();
+
+//       const merchantReference =
+//       `OT-${uuidv4()}`;
+
+//       const response =
+//         await checkout.PaymentsApi.sessions({
+//           amount: {
+//             currency: "USD",
+//             value: 1000,
+//           },
+
+//           reference: orderId,
+
+//           merchantAccount:
+//             process.env
+//               .ADYEN_MERCHANT_ACCOUNT,
+
+//           returnUrl:
+//             "http://localhost:5173/",
+
+//           countryCode: "US",
+
+//           shopperLocale: "en-US",
+
+//           channel: "Web",
+//         });
+
+//       res.json(response);
+//     } catch (error) {
+//       console.log(
+//         error.response?.body ||
+//           error.message
+//       );
+
+//       res.status(500).json({
+//         error: error.message,
+//       });
+//     }
+//   }
+// );
+
 app.post(
   "/create-payment-session",
   async (req, res) => {
+
     try {
-      const orderId = `ORDER_${Date.now()}`;
+
+      const orderId =
+        Date.now().toString();
+
+      const merchantReference =
+        `OT-${uuidv4()}`;
+
       const response =
-        await checkout.PaymentsApi.sessions({
-          amount: {
-            currency: "USD",
-            value: 1000,
-          },
+        await checkout
+          .PaymentsApi
+          .sessions({
 
-          reference: orderId,
+            amount: {
+              currency: "USD",
+              value: 1000,
+            },
 
-          merchantAccount:
-            process.env
-              .ADYEN_MERCHANT_ACCOUNT,
+            reference:
+              merchantReference,
 
-          returnUrl:
-            "http://localhost:5173/",
+            merchantAccount:
+              process.env
+                .ADYEN_MERCHANT_ACCOUNT,
 
-          countryCode: "US",
+            returnUrl:
+              "http://localhost:5173/",
 
-          shopperLocale: "en-US",
+            countryCode:
+              "US",
 
-          channel: "Web",
-        });
+            shopperLocale:
+              "en-US",
 
-      res.json(response);
+            channel:
+              "Web",
+          });
+
+      res.json({
+
+        ...response,
+
+        orderId,
+
+        merchantReference,
+      });
+
     } catch (error) {
+
       console.log(
         error.response?.body ||
-          error.message
+        error.message
       );
 
       res.status(500).json({
-        error: error.message,
+        error:
+          error.message,
       });
     }
   }
 );
-
 
 
 
@@ -196,19 +266,42 @@ app.post("/webhook", async (req, res) => {
         notification.pspReference
       );
 
+      // const insertQuery = `
+      //   INSERT INTO payments
+      //   (
+      //     transactionId,
+      //     merchantReference,
+      //     status,
+      //     amount
+      //   )
+      //   VALUES (?, ?, ?, ?)
+      // `;
+
       const insertQuery = `
         INSERT INTO payments
         (
           transactionId,
           merchantReference,
           status,
-          amount
+          amount,
+          orderId
         )
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?)
       `;
 
-      db.query(
-        insertQuery,
+      // db.query(
+      //   insertQuery,
+      //   [
+      //     notification.pspReference,
+
+      //     notification.merchantReference,
+
+      //     notification.success,
+
+      //     notification.amount.value,
+      //   ],
+
+      
         [
           notification.pspReference,
 
@@ -217,7 +310,9 @@ app.post("/webhook", async (req, res) => {
           notification.success,
 
           notification.amount.value,
-        ],
+
+          Date.now().toString(),
+        ]
 
         (error, result) => {
           if (error) {
