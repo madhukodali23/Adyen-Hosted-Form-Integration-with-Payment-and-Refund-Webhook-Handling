@@ -2,8 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
-const { v4: uuidv4 } =
-  require("uuid");
+const { v4: uuidv4 } = require("uuid");
 
 const {
   Client,
@@ -107,9 +106,6 @@ app.get("/", (req, res) => {
 //   }
 // );
 
-
-const { v4: uuidv4 } =
-  require("uuid");
 
 app.post(
   "/create-payment-session",
