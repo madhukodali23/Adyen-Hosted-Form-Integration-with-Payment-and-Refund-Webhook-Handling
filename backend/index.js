@@ -226,7 +226,8 @@ app.post("/webhook", async (req, res) => {
 
           notification.amount.value,
 
-          notification.merchantReference,
+          Date.now(),
+
         ],
       
         (error, result) => {
