@@ -200,27 +200,15 @@ app.post("/webhook", async (req, res) => {
         notification.pspReference
       );
 
-      // const insertQuery = `
-      //   INSERT INTO payments
-      //   (
-      //     transactionId,
-      //     merchantReference,
-      //     status,
-      //     amount
-      //   )
-      //   VALUES (?, ?, ?, ?)
-      // `;
-
       const insertQuery = `
         INSERT INTO payments
         (
           transactionId,
           merchantReference,
           status,
-          amount,
-          orderId
+          amount
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?)
       `;
 
       db.query(
