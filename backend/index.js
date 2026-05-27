@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
+const { v4: uuidv4 } =
+  require("uuid");
 
 const {
   Client,
@@ -80,7 +82,7 @@ app.post(
             value: 1000,
           },
 
-          reference: orderId,
+          reference: merchantReference,
 
           merchantAccount:
             process.env
@@ -201,15 +203,17 @@ app.post("/webhook", async (req, res) => {
       );
 
       const insertQuery = `
-        INSERT INTO payments
-        (
-          transactionId,
-          merchantReference,
-          status,
-          amount
-        )
-        VALUES (?, ?, ?, ?)
-      `;
+      INSERT INTO payments
+      (
+        transactionId,
+        merchantReference,
+        status,
+        amount,
+        orderId
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
 
       db.query(
         insertQuery,
@@ -221,9 +225,9 @@ app.post("/webhook", async (req, res) => {
           notification.success,
 
           notification.amount.value,
-        ],
 
-      
+          notification.merchantReference,
+        ],
       
         (error, result) => {
           if (error) {
