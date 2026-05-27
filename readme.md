@@ -1,34 +1,41 @@
-# Adyen Hosted Payment Integration with Webhook and Refund Handling
+# Adyen Hosted Payment Integration with Webhook, Refunds, AWS Serverless Deployment, and 3D Secure Support
 
 ## Project Overview
 
-This project implements a complete end-to-end payment processing system using Adyen Drop-in integration. The application supports secure payment processing, webhook handling, refund functionality, HMAC validation, and cloud database persistence.
+This project implements a complete end-to-end payment processing system using Adyen Drop-in integration. The application supports secure payment processing, webhook handling, refund functionality, HMAC validation, AWS serverless deployment, idempotency handling, and cloud database persistence.
 
-The system demonstrates a production-like payment architecture with deployed backend services, secure webhook verification, and cloud-hosted MySQL database integration.
+The system demonstrates a production-style payment architecture with secure webhook verification, cloud-hosted MySQL database integration, frontend/backend deployment, and Adyen Web v6 payment flow handling.
 
 ---
 
 # Features
 
-* Adyen Drop-in payment integration
-* Payment session creation using Adyen Sessions API
-* AUTHORISATION webhook handling
-* REFUND webhook handling
-* HMAC signature validation for webhook security
-* Cloud MySQL database integration using Railway
-* Refund API implementation
-* Payment and refund persistence
-* Public webhook deployment using Render
-* Success and failure payment handling
+- Adyen Drop-in payment integration
+- Payment session creation using Adyen Sessions API
+- AUTHORISATION webhook handling
+- REFUND webhook handling
+- HMAC signature validation for webhook security
+- AWS Lambda serverless backend deployment
+- AWS API Gateway integration
+- AWS SSM Parameter Store secret management
+- Cloud MySQL database integration using Railway
+- Refund API implementation
+- Payment and refund persistence
+- Idempotency handling using UNIQUE constraints
+- Success and failure payment handling
+- Adyen Web v6 callback handling
+- 3D Secure (3DS) ready architecture
 
 ---
 
 # System Architecture
 
 ```text
-Frontend (React)
+Frontend (React + Adyen Drop-in)
         ↓
 Backend API (Node.js + Express)
+        ↓
+AWS Lambda + API Gateway
         ↓
 Adyen Payment Gateway
         ↓
@@ -49,10 +56,24 @@ Cloud MySQL Database (Railway)
 3. Session response returned to frontend
 4. Adyen Drop-in rendered on frontend
 5. User enters card details
-6. Payment processed by Adyen
+6. Adyen processes payment
 7. Adyen triggers AUTHORISATION webhook
 8. Backend validates HMAC signature
 9. Payment details stored in payments table
+10. Frontend navigates to success/failure page
+```
+
+---
+
+# Failure Handling Flow
+
+```text
+1. Payment gets refused by Adyen
+2. Adyen Web v6 triggers onPaymentFailed callback
+3. Frontend redirects to failure page
+4. Adyen sends failure webhook event
+5. Backend validates HMAC signature
+6. Failed payment stored in database
 ```
 
 ---
@@ -74,57 +95,33 @@ Cloud MySQL Database (Railway)
 
 ## Frontend
 
-* React.js
-* Adyen Web Drop-in
-* Axios
+- React.js
+- Adyen Web Drop-in
+- Axios
 
 ## Backend
 
-* Node.js
-* Express.js
-* MySQL2
+- Node.js
+- Express.js
+- MySQL2
 
 ## Database
 
-* MySQL
-* Railway Cloud Database
+- MySQL
+- Railway Cloud Database
 
-## Deployment
+## Cloud & Deployment
 
-* Render
+- AWS Lambda
+- AWS API Gateway
+- AWS SSM Parameter Store
+- Serverless Framework
+- Vercel
 
 ## Payment Gateway
 
-* Adyen
+- Adyen
 
----
-
-# Folder Structure
-
-```
-project-root/
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.js
-│   │   ├── main.jsx
-│   │   ├── Success.jsx
-│   │   ├── Failed.jsx
-│   │   └── styles.css
-│   │
-│   ├── public/
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend/
-│   ├── index.js
-│   ├── package.json
-│   ├── .env
-│   └── node_modules/
-│
-├── README.md
-└── screenshots/
-```
 ---
 
 # Database Schema
@@ -179,14 +176,15 @@ POST /webhook
 
 Handles:
 
-* AUTHORISATION events
-* REFUND events
+- AUTHORISATION events
+- REFUND events
 
 Performs:
 
-* HMAC validation
-* Payment persistence
-* Refund persistence
+- HMAC validation
+- Payment persistence
+- Refund persistence
+- Duplicate event handling
 
 ---
 
@@ -208,30 +206,88 @@ Triggers refund request through Adyen.
 
 ---
 
-# Environment Variables
+# Adyen Web v6 Payment Handling
 
-## Backend .env
+## Successful Payments
 
-```env
-ADYEN_API_KEY=your_adyen_api_key
-ADYEN_MERCHANT_ACCOUNT=your_merchant_account
-ADYEN_HMAC_KEY=your_hmac_key
+Handled using:
 
-DB_HOST=your_db_host
-DB_PORT=your_db_port
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=your_db_name
+```js
+onPaymentCompleted
 ```
+
+## Failed Payments
+
+Handled using:
+
+```js
+onPaymentFailed
+```
+
+Important Learning:
+
+In Adyen Web v6, refused or cancelled payments are handled separately using the `onPaymentFailed` callback instead of `onPaymentCompleted`.
+
+---
+
+# AWS SSM Parameter Store
+
+Sensitive values were securely stored using AWS Systems Manager (SSM) Parameter Store.
+
+Examples:
+
+- Adyen API keys
+- HMAC keys
+- Database credentials
+
+Benefits:
+
+- Secure secret management
+- Avoid hardcoding credentials
+- Centralized configuration management
 
 ---
 
 # Security Features
 
-* HMAC webhook validation implemented
-* Environment variable based secret management
-* Secure webhook verification using Adyen HMAC validator
-* Cloud database integration with SSL support
+- HMAC webhook validation implemented
+- Environment variable based secret management
+- Secure webhook verification using Adyen HMAC validator
+- Cloud database integration with SSL support
+- AWS SSM secure parameter management
+- Idempotency handling for webhook retries
+
+---
+
+# Idempotency Handling
+
+To prevent duplicate webhook processing and repeated transaction entries, idempotency handling was implemented using UNIQUE constraints on transaction and refund identifiers.
+
+## Payments Table UNIQUE Constraint
+
+```sql
+ALTER TABLE payments
+ADD CONSTRAINT unique_transaction
+UNIQUE (transactionId);
+```
+
+## Refunds Table UNIQUE Constraint
+
+```sql
+ALTER TABLE refunds
+ADD CONSTRAINT unique_refund
+UNIQUE (refundId);
+```
+
+## Why Idempotency Was Needed
+
+Payment gateways like Adyen may retry webhook delivery multiple times due to:
+
+- Network failures
+- Timeout issues
+- Delivery confirmation failures
+
+Without idempotency handling, duplicate webhook events could create multiple payment or refund records in the database.
 
 ---
 
@@ -239,14 +295,17 @@ DB_NAME=your_db_name
 
 ## Frontend
 
-Can be deployed using:
+Deployed using:
 
-* Vercel
-* Netlify
+- Vercel
 
 ## Backend
 
-Deployed using Render.
+Deployed using:
+
+- AWS Lambda
+- API Gateway
+- Serverless Framework
 
 ## Database
 
@@ -256,24 +315,27 @@ Hosted on Railway MySQL.
 
 # Challenges Faced
 
-* Webhook accessibility for localhost environments
-* Cloud database connectivity issues
-* MySQL connection pool configuration
-* Deployment environment variable management
-* HMAC validation implementation
-* Payment webhook testing and debugging
+- Understanding Adyen Web v6 callback behavior
+- Triggering and handling failure payment scenarios
+- Identifying that refused payments are handled using onPaymentFailed callback
+- Understanding Adyen documentation and test simulation behavior
+- Webhook synchronization
+- AWS serverless deployment
+- MySQL connection configuration
+- HMAC validation implementation
 
 ---
 
 # Future Improvements
 
-* AWS Lambda migration
-* API Gateway integration
-* Transaction history dashboard
-* Idempotency handling
-* Admin analytics dashboard
-* Monitoring and logging system
-* Automated refund management
+- 3D Secure (3DS) authentication integration
+- OTP-based payment verification
+- Real-time payment status tracking
+- WebSocket-based updates
+- Fraud detection system
+- Monitoring and logging dashboards
+- Analytics dashboard
+- Multi-payment gateway support
 
 ---
 
@@ -285,63 +347,53 @@ Hosted on Railway MySQL.
 Card Number: 4111 1111 1111 1111
 Expiry: 03/30
 CVV: 737
-```
-
-## Refused Payment
-
-```text
-Card Number: 4000 0000 0000 0002
-Expiry: 03/30
-CVV: 737
+Card Holder Name: John Smith
 ```
 
 ---
 
+## Refused Payment
 
-
-## Idempotency Handling
-
-To prevent duplicate webhook processing and repeated transaction entries, idempotency handling was implemented using UNIQUE constraints on transaction and refund identifiers.
-
-### Payments Table UNIQUE Constraint
-
-```sql
-ALTER TABLE payments
-ADD CONSTRAINT unique_transaction
-UNIQUE (transactionId);
+```text
+Card Number: 4111 1111 1111 1111
+Expiry: 03/30
+CVV: 737
+Card Holder Name: REFUSED
 ```
 
-### Refunds Table UNIQUE Constraint
+---
 
-```sql
-ALTER TABLE refunds
-ADD CONSTRAINT unique_refund
-UNIQUE (refundId);
-```
+# 3D Secure (3DS)
 
-### Why Idempotency Was Needed
+3D Secure is an additional authentication layer used during online payments.
 
-Payment gateways like Adyen may retry webhook delivery multiple times due to:
-- Network failures
-- Timeout issues
-- Delivery confirmation failures
+Examples:
 
-Without idempotency handling, duplicate webhook events could create multiple payment or refund records in the database.
+- OTP verification
+- Banking authentication page
+- Biometric verification
 
-### Solution
+Benefits:
 
-By enforcing UNIQUE constraints:
-- Duplicate transaction inserts are automatically rejected
-- Duplicate refund inserts are prevented
-- Database consistency is maintained
-- Webhook retries are safely handled
+- Reduced fraud
+- Enhanced payment security
+- Improved transaction authentication
 
-### Result
+The architecture is prepared for future 3DS integration using Adyen Sessions Flow.
 
-This ensures reliable and production-safe webhook processing for both payments and refunds.
+---
 
 # Conclusion
 
-This project demonstrates a production-style payment integration system using Adyen with secure webhook validation, cloud deployment, refund handling, and persistent cloud database storage.
+This project demonstrates a production-style payment integration system using Adyen with:
 
-The implementation covers core payment gateway concepts including payment authorization, webhook architecture, cloud deployment, database persistence, refund processing, and HMAC-based webhook security.
+- Secure webhook validation
+- AWS serverless deployment
+- Refund handling
+- Database persistence
+- HMAC-based webhook security
+- Failure handling using Adyen Web v6
+- Idempotent webhook processing
+- Cloud-native payment architecture
+
+The implementation covers real-world payment gateway concepts including payment authorization, webhook systems, secure cloud deployment, refund workflows, and scalable backend architecture.
