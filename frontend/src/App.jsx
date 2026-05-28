@@ -21,6 +21,7 @@ function App() {
 
         const session = response.data;
 
+
         const checkout = await AdyenCheckout({
           environment: "test",
 
@@ -57,6 +58,10 @@ function App() {
               hasHolderName: true,
               holderNameRequired: true,
             },
+            paysafecard: {
+                visibility: "hidden",
+            },
+            removePaymentMethods: ["paysafecard"], 
           },
 
           showPayButton: true,

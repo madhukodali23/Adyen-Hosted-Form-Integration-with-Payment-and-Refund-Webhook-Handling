@@ -324,7 +324,7 @@ app.get("/payments", (req, res) => {
   const query =
     "SELECT * FROM payments ORDER BY createdAt DESC";
 
-  db.query(query, (error, result) => {
+    db.query(query, (error, result) => {
 
     if (error) {
 
