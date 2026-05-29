@@ -1,4 +1,10 @@
 function Success() {
+  const params = new URLSearchParams(window.location.search);
+  const orderID =
+    params.get("orderID") ||
+    params.get("orderId") ||
+    sessionStorage.getItem("lastOrderId");
+
   return (
     <div
       style={{
@@ -14,6 +20,12 @@ function Success() {
         Your payment was processed
         successfully.
       </p>
+
+      {orderID && (
+        <p>
+          Order ID: <strong>{orderID}</strong>
+        </p>
+      )}
     </div>
   );
 }

@@ -64,6 +64,9 @@ const createSessionSchema = Joi.object({
   countryCode: Joi.string().length(2).uppercase().default("US"),
 });
 
+// Refund requests are performed by `orderId` (your internal order identifier).
+// We look up the Adyen PSP reference (transactionId) for that order and use
+// it to request the refund from Adyen.
 const refundSchema = Joi.object({
   // orderId is YOUR internal order ID (from payments.orderId)
   orderId: Joi.string().required(),
@@ -167,7 +170,7 @@ app.post("/refund", async (req, res) => {
   const { orderId, amount: requestedAmount } = value;
 
   try {
-    // 2. Fetch the payment row
+    // 2. Fetch the payment row by orderId and obtain the PSP reference
     const [rows] = await db.execute(
       `SELECT transactionId, amount, currency, status FROM payments WHERE orderId = ? LIMIT 1`,
       [orderId]
@@ -186,7 +189,7 @@ app.post("/refund", async (req, res) => {
       });
     }
 
-    // 4. Guard: prevent duplicate refunds
+    // 4. Guard: prevent duplicate refunds for the resolved payment PSP reference
     const [existingRefunds] = await db.execute(
       `SELECT refundId FROM refunds WHERE paymentId = ? AND status != 'failed' LIMIT 1`,
       [payment.transactionId]

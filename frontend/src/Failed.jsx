@@ -1,4 +1,10 @@
 function Failed() {
+  const params = new URLSearchParams(window.location.search);
+  const orderID =
+    params.get("orderID") ||
+    params.get("orderId") ||
+    sessionStorage.getItem("lastOrderId");
+
   return (
     <div
       style={{
@@ -14,6 +20,12 @@ function Failed() {
         Something went wrong with
         your payment.
       </p>
+
+      {orderID && (
+        <p>
+          Order ID: <strong>{orderID}</strong>
+        </p>
+      )}
     </div>
   );
 }
