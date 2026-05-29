@@ -235,7 +235,7 @@ app.post("/create-payment-session", async (req, res) => {
 
 
 app.post("/refund", async (req, res) => {
-  // Strictly allow only pspReference — nothing else
+  // Strictly accept only pspReference — reject any other field
   const schema = Joi.object({
     pspReference: Joi.string().required(),
   });
@@ -249,37 +249,40 @@ app.post("/refund", async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      `SELECT transactionId, orderId, amount, currency, status
+      `SELECT transactionId, orderId, amount, currency, status 
        FROM payments WHERE transactionId = ? LIMIT 1`,
       [pspReference]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: "No payment found for this pspReference" });
+      return res.status(404).json({ error: `No payment found for pspReference: ${pspReference}` });
     }
 
     const payment = rows[0];
 
     if (payment.status !== "authorised") {
       return res.status(400).json({
-        error: `Cannot refund. Payment status is "${payment.status}".`,
+        error: `Cannot refund a payment with status "${payment.status}". Only authorised payments can be refunded.`,
       });
     }
 
-    const [existing] = await db.execute(
+    const [existingRefunds] = await db.execute(
       `SELECT refundId FROM refunds WHERE paymentId = ? AND status != 'failed' LIMIT 1`,
       [pspReference]
     );
-    if (existing.length > 0) {
-      return res.status(409).json({ error: "Refund already requested for this transaction." });
+    if (existingRefunds.length > 0) {
+      return res.status(409).json({
+        error: "A refund has already been requested for this transaction.",
+      });
     }
 
     const refundReference = `REFUND-${uuidv4()}`;
 
-    const response = await checkout.ModificationsApi.cancelOrRefund(
+    const response = await checkout.ModificationsApi.refundCapturedPayment(
       pspReference,
       {
         merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
+        amount: { currency: payment.currency, value: payment.amount },
         reference: refundReference,
       }
     );
@@ -291,7 +294,8 @@ app.post("/refund", async (req, res) => {
     );
 
     res.json({
-      message: "Refund initiated successfully",
+      message: "Refund initiated",
+      refundPspReference: response.pspReference,
       orderId: payment.orderId,
       pspReference,
       amount: payment.amount,
