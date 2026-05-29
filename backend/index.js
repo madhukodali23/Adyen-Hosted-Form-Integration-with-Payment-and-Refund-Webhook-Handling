@@ -90,7 +90,7 @@ app.post("/create-payment-session", async (req, res) => {
   const { amount, currency, shopperEmail, shopperName, shopperReference, countryCode } = value;
 
   // 2. Generate unique IDs
-  const orderId = `ORD-${uuidv4()}`;           // your internal order id
+  const orderId = uuidv4();           // your internal order id
   const merchantReference = uuidv4();           // sent to Adyen — no prefix needed, keep it clean
 
   try {
@@ -158,82 +158,6 @@ app.post("/create-payment-session", async (req, res) => {
 });
 
 // ─── REFUND ────────────────────────────────────────────────────────────────────
-// Accepts orderId — looks up the pspReference from DB, then requests a refund.
-// Guards against duplicate refunds.
-// app.post("/refund", async (req, res) => {
-//   // 1. Validate
-//   const { error, value } = refundSchema.validate(req.body);
-//   if (error) {
-//     return res.status(400).json({ error: error.details[0].message });
-//   }
-
-//   const { orderId, amount: requestedAmount } = value;
-
-//   try {
-//     // 2. Fetch the payment row by orderId and obtain the PSP reference
-//     const [rows] = await db.execute(
-//       `SELECT transactionId, amount, currency, status FROM payments WHERE orderId = ? LIMIT 1`,
-//       [orderId]
-//     );
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ error: `No payment found for orderId: ${orderId}` });
-//     }
-
-//     const payment = rows[0];
-
-//     // 3. Guard: only refund authorised payments
-//     if (payment.status !== "authorised") {
-//       return res.status(400).json({
-//         error: `Cannot refund a payment with status "${payment.status}". Only authorised payments can be refunded.`,
-//       });
-//     }
-
-//     // 4. Guard: prevent duplicate refunds for the resolved payment PSP reference
-//     const [existingRefunds] = await db.execute(
-//       `SELECT refundId FROM refunds WHERE paymentId = ? AND status != 'failed' LIMIT 1`,
-//       [payment.transactionId]
-//     );
-//     if (existingRefunds.length > 0) {
-//       return res.status(409).json({
-//         error: "A refund has already been requested for this transaction.",
-//       });
-//     }
-
-//     const refundAmount = requestedAmount || payment.amount;
-//     const refundReference = `REFUND-${uuidv4()}`;
-
-//     // 5. Call Adyen Refund API
-//     const response = await checkout.ModificationsApi.refundCapturedPayment(
-//       payment.transactionId, // paymentPspReference
-//       {
-//         merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
-//         amount: { currency: payment.currency, value: refundAmount },
-//         reference: refundReference,
-//       }
-//     );
-
-//     // 6. Insert refund row as 'pending' — webhook will update it to success/failed
-//     await db.execute(
-//       `INSERT INTO refunds (refundId, paymentId, orderId, refundReference, status, refundAmount, createdAt, updatedAt)
-//        VALUES (?, ?, ?, ?, 'pending', ?, NOW(), NOW())`,
-//       [response.pspReference, payment.transactionId, orderId, refundReference, refundAmount]
-//     );
-
-//     res.json({
-//       message: "Refund initiated",
-//       refundPspReference: response.pspReference,
-//       orderId,
-//       amount: refundAmount,
-//       currency: payment.currency,
-//     });
-//   } catch (err) {
-//     console.error("Refund error:", err.response?.body || err.message);
-//     res.status(500).json({ error: "Failed to initiate refund" });
-//   }
-// });
-
-
 app.post("/refund", async (req, res) => {
   // Strictly accept only pspReference — reject any other field
   const schema = Joi.object({
